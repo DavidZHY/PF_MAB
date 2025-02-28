@@ -11,23 +11,23 @@ class client(object):
                  nclients,
                  palpha,
                  fp):
-        self.T = thorizon
-        self.id = index
-        self.K = narms
-        self.M = nclients
-        self.alpha = palpha
-        self.fp = fp
+        self.T = thorizon # rounds
+        self.id = index # client id
+        self.K = narms # number of arms
+        self.M = nclients # number of clients
+        self.alpha = palpha # the hyperparameter
+        self.fp = fp # designated function
 
         self.p = 1
-        self.local_set = set(np.arange(self.K))
-        self.global_set = set(np.arange(self.K))
-        self.local_mean = np.zeros(self.K)
-        self.global_mean = np.zeros(self.K)
-        self.mixed_mean = np.zeros(self.K)
-        self.reward = np.zeros(self.K)
+        self.local_set = set(np.arange(self.K)) # testing arms locally
+        self.global_set = set(np.arange(self.K)) # testing arms globally
+        self.local_mean = np.zeros(self.K) # local mean of each arm
+        self.global_mean = np.zeros(self.K) # global mean of each arm
+        self.mixed_mean = np.zeros(self.K) # mixed mean of each arm (alpha*local_mean+(1-alpha)*global_mean)
+        self.reward = np.zeros(self.K) # reward of each arm
 
-        self.pull = np.zeros(self.K)
-        self.p_length = self.fp(self.p)
+        self.pull = np.zeros(self.K) # chosen arm
+        self.p_length = self.fp(self.p) # f(p)
         self.Fp = 0
 
         self.fphase = 0
@@ -39,14 +39,14 @@ class client(object):
 
     def play(self):
         if self.fphase < np.ceil((1-self.alpha)*self.p_length)*len(self.global_set): #global exploration
-#            print("loc", self.p)
-            #play = list(self.global_set)[self.fphase%len(self.global_set)]
+            # print("loc", self.p)
+            # play = list(self.global_set)[self.fphase%len(self.global_set)]
             play = list(self.global_set)[int(self.fphase//(np.ceil((1-self.alpha)*self.p_length)))]
             self.fphase += 1
 
         elif self.gphase < np.ceil(self.M*self.alpha*self.p_length)*len(self.local_set): #local exploration
-#            print("glob", self.p)
-            #play = list(self.local_set)[self.gphase%len(self.local_set)]
+            # print("glob", self.p)
+            # play = list(self.local_set)[self.gphase%len(self.local_set)]
             play = list(self.local_set)[int(self.gphase//(np.ceil(self.M*self.alpha*self.p_length)))]
             self.gphase += 1
 

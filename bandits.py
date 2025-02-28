@@ -11,20 +11,26 @@ class PFEDUCB(object):
                  means, # M*K
                  alpha,
                  reward='Gaussian'):
-        self.M = means.shape[0]
-        self.K = means.shape[1]
-        self.local_means = means
-        self.reward_type = reward
-        self.alpha = alpha
-        self.T = T
-        self.C = 1
-        self.comm = 0
+        self.M = means.shape[0] # 客户端数量
+        self.K = means.shape[1] # 臂数量
+        self.local_means = means # 每个客户端每个臂的均值
+        self.reward_type = reward # 模拟奖励使用的方法
+        self.alpha = alpha # 超参数
+        self.T = T # 轮数
+        self.C = 1 # 平衡通讯的一个参数
+        self.comm = 0 # 平衡通讯的另一个参数
 
         self.global_means = np.sum(self.local_means, axis=0)/self.M
         self.clients = [
-            client(index = i, thorizon = self.T, narms=self.K, nclients = self.M, palpha = self.alpha, fp=fun_fp) for i in range(self.M)
+            client(index = i,
+                   thorizon = self.T,
+                   narms=self.K,
+                   nclients = self.M,
+                   palpha = self.alpha,
+                   fp=fun_fp) for i in range(self.M)
         ]
-        self.server = server(narms=self.K, nclients = self.M)
+        self.server = server(narms=self.K,
+                             nclients = self.M)
 
     def simulate_single_step_rewards(self):
         if self.reward_type == 'Bernoulli':
@@ -36,9 +42,9 @@ class PFEDUCB(object):
         local_rews = self.simulate_single_step_rewards()
         global_rews = np.mean(local_rews,axis=0)
 
-        local_rewards = np.array([local_rews[i,plays[i]] for i in range(self.M)])
-        global_rewards = np.array([global_rews[plays[i]] for i in range(self.M)])
-        mixed_rewards = self.alpha*local_rewards+(1-self.alpha)*global_rewards
+        local_rewards = np.array([local_rews[i,plays[i]] for i in range(self.M)]) # 每个客户端拉动的臂对应的本地奖励
+        global_rewards = np.array([global_rews[plays[i]] for i in range(self.M)]) # 每个客户端拉动的臂对应的全局奖励
+        mixed_rewards = self.alpha*local_rewards+(1-self.alpha)*global_rewards # 每个客户端拉动的臂对应的混合奖励
         #rewards = np.array([self.alpha*local_rews[i,plays[i]]+(1-self.alpha)*global_rews[plays[i]] for i in range(self.M)])
 
         return local_rewards, global_rewards, mixed_rewards
@@ -57,14 +63,14 @@ class PFEDUCB(object):
         for _ in range(self.T):
             plays = np.zeros(self.M)
 
-            plays = [(int)(client.play()) for client in self.clients]
-            local_rews, global_rews, mixed_rews = self.simulate_single_step(plays)
+            plays = [(int)(client.play()) for client in self.clients] # 每个客户端拉动的臂
+            local_rews, global_rews, mixed_rews = self.simulate_single_step(plays) # 每个客户端对应的三种奖励
             #obs, rews = self.simulate_single_step(plays)  # observations of all players
 
-            local_rewards.append(np.sum(local_rews))
-            global_rewards.append(np.sum(global_rews))
-            mixed_rewards.append(np.sum(mixed_rews))
-            play_history.append(plays)
+            local_rewards.append(np.sum(local_rews)) # 全局的本地奖励（加和）
+            global_rewards.append(np.sum(global_rews)) # 全局的全局奖励（加和）
+            mixed_rewards.append(np.sum(mixed_rews)) # 全局的混合奖励（加和）
+            play_history.append(plays) # 拉动臂的记录
 
             #print(plays)
 
